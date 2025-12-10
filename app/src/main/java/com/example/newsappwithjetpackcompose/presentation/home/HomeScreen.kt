@@ -225,6 +225,7 @@ fun Tabbar() {
     }
 }
 
+// TODO: test commıt 
 @Composable
 fun NewsHorizontal(articles: List<Article>, navController: NavController,homeViewModel: HomeViewModel) {
     val listState = rememberLazyListState()
