@@ -3,11 +3,13 @@ package com.example.newsappwithjetpackcompose.domain.repository
 import com.example.newsappwithjetpackcompose.data.api.NewsApi
 import com.example.newsappwithjetpackcompose.data.dto.NewsResponseModel
 import com.example.newsappwithjetpackcompose.util.Resource
+import com.info.androidileriders2.roomDB.Favorite
+import com.info.androidileriders2.roomDB.FavoriteDao
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class NewsRepository @Inject constructor(
-    private val api: NewsApi,
-    //private val dao: FavoriteDao
+    private val api: NewsApi, private val dao: FavoriteDao
 ) {
     suspend fun <T> safeCall(block: suspend () -> T): Resource<T> {
         return try {
@@ -26,10 +28,11 @@ class NewsRepository @Inject constructor(
     suspend fun getSearchNews(query: String): Resource<NewsResponseModel> =
         safeCall { api.getSearchNews(query) }
 
-//    val allFavorites: Flow<List<Favorite>> = dao.getAllFavoriteItemsFlow()
-//
-//    suspend fun insert(favorite: Favorite) = dao.insert(favorite)
-//
-//    suspend fun delete(favorite: Favorite) = dao.delete(favorite)
+    val allFavorites: Flow<List<Favorite>> = dao.getAllFavoriteItemsFlow()
+
+    suspend fun insert(favorite: Favorite) = dao.insert(favorite)
+
+    suspend fun delete(favorite: Favorite) = dao.delete(favorite)
+
 
 }

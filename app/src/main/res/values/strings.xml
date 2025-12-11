@@ -1,3 +1,21 @@
 <resources>
-    <string name="app_name">NewsAppWithJetpackCompose</string>
+    <string name="app_name">News App</string>
+    <string name="en">EN</string>
+    <string name="no_articles_found">Новости не найдены</string>
+    <string name="news_catcher">News Catcher</string>
+    <string name="search">Search…</string>
+    <string name="ru">RU</string>
+    <string name="your_favorite_news_is_empty">Your Favorite News is Empty</string>
+    <string name="x_b_r_ba_l">News Title</string>
+    <string name="saved">Saved</string>
+    <string name="unsaved">Unsaved</string>
+    <string name="there_is_no_source">There is no source</string>
+    <string name="there_is_no_title">There is no title</string>
+    <string name="there_is_no_author">There is no Author</string>
+    <string name="there_is_no_description">There is no description</string>
+    <string name="there_is_no_content">There is no content</string>
+    <string name="read_more">Read more…</string>
+    <string name="unsave">Unsave</string>
+    <string name="save">Save</string>
+    <string name="share">Share</string>
 </resources>

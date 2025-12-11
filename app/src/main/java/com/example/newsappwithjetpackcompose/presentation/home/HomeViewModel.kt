@@ -1,23 +1,21 @@
 package com.example.newsappwithjetpackcompose.presentation.home
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.newsappwithjetpackcompose.data.dto.Article
+import com.example.newsappwithjetpackcompose.data.local.datastore.PreferencesManager
 import com.example.newsappwithjetpackcompose.domain.repository.NewsRepository
 import com.example.newsappwithjetpackcompose.domain.state.NewsUiState
 import com.example.newsappwithjetpackcompose.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val newsRepository: NewsRepository
+    private val newsRepository: NewsRepository, private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _newsState = MutableStateFlow(NewsUiState())
@@ -29,11 +27,27 @@ class HomeViewModel @Inject constructor(
     private val _searchState = MutableStateFlow(NewsUiState())
     val searchState = _searchState.asStateFlow()
 
+
+    private val _currentLang = MutableStateFlow("EN")
+    val currentLang: StateFlow<String> get() = _currentLang
+
+
     init {
+        viewModelScope.launch {
+            preferencesManager.getLanguage.collect { lang ->
+                _currentLang.value = lang
+            }
+        }
         getTopHeadlines()
         getCategoryNews()
     }
 
+    fun changeLanguage(lang: String) {
+        viewModelScope.launch {
+            preferencesManager.setLanguage(lang)
+            _currentLang.value = lang
+        }
+    }
 
     fun getTopHeadlines(sources: String = "bbc-news") {
         viewModelScope.launch {

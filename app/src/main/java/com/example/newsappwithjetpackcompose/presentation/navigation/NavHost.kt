@@ -1,5 +1,6 @@
 package com.example.newsappwithjetpackcompose.presentation.navigation
 
+import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
@@ -23,7 +24,7 @@ import kotlin.reflect.typeOf
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NavHost() {
+fun NavHost(localizedContext: Context) {
     val navController = rememberNavController()
     var selectedIndex by remember { mutableIntStateOf(0) }
 
@@ -46,20 +47,27 @@ fun NavHost() {
                 navController = navController,
                 selectedIndex = selectedIndex,
                 onItemSelected = { selectedIndex = it },
-                viewModel = homeViewModel
+                viewModel = homeViewModel,
+                localizedContext = localizedContext
             )
         }
         composable<Screen.Favorite> {
             FavoriteScreen(
                 navController = navController,
                 selectedIndex = selectedIndex,
-                onItemSelected = { selectedIndex = it }
+                onItemSelected = { selectedIndex = it },
+                localizedContext = localizedContext
             )
         }
         composable<Screen.Detail>(typeMap = mapOf(typeOf<Article>() to navTypeOf<Article>())) {
-            val article = it.toRoute<Screen.Detail>().article
-            DetailScreen(navController = navController, article = article)
+            val args = it.toRoute<Screen.Detail>()
+            val article = args.article
 
+            DetailScreen(
+                navController = navController,
+                article = article,
+                localizedContext = localizedContext
+            )
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.newsappwithjetpackcompose.presentation.home
 
+import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -58,6 +59,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -82,38 +84,42 @@ fun HomeScreen(
     navController: NavController,
     viewModel: HomeViewModel = hiltViewModel(),
     selectedIndex: Int,
-    onItemSelected: (Int) -> Unit
+    onItemSelected: (Int) -> Unit,
+    localizedContext: Context
 ) {
     val state by viewModel.newsState.collectAsStateWithLifecycle()
     val category by viewModel.categoryState.collectAsStateWithLifecycle()
     val searchState by viewModel.searchState.collectAsStateWithLifecycle()
 
-    var currentLanguage by remember { mutableStateOf("EN") }
-    var currentCategory by remember { mutableStateOf(NewsCategory.BUSINESS) }
+    val currentLanguage by viewModel.currentLang.collectAsStateWithLifecycle()
     var languageDropdownExpanded by remember { mutableStateOf(false) }
+    var currentCategory by remember { mutableStateOf(NewsCategory.BUSINESS) }
     var searchText by remember { mutableStateOf("") }
 
+
     Scaffold(
-        modifier = Modifier.fillMaxSize(), bottomBar = {
+        modifier = Modifier.fillMaxSize(), containerColor = Color.White, bottomBar = {
             BottomBar(
                 selectedIndex = selectedIndex,
                 onItemSelected = onItemSelected,
                 navController = navController
             )
         }) { paddingValues ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            Tabbar()
+            Tabbar(localizedContext)
+
             if (state.isLoading) {
                 ShimmerNewsGridSimple()
             } else {
                 state.news?.let { articles ->
-                    NewsHorizontal(articles = articles, navController = navController, homeViewModel = viewModel)
+                    NewsHorizontal(
+                        articles = articles, navController = navController
+                    )
                 }
             }
 
@@ -121,7 +127,8 @@ fun HomeScreen(
                 text = searchText, onTextChange = { newText ->
                     searchText = newText
                     if (newText.isNotEmpty()) viewModel.getSearchNews(newText)
-                })
+                }, localizedContext
+            )
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -150,11 +157,8 @@ fun HomeScreen(
             if (category.isLoading) {
                 ShimmerCategoryNewsItemSimple()
             } else {
-                val articlesToShow = if (searchText.isNotEmpty()) {
-                    searchState.news.orEmpty()
-                } else {
-                    category.news.orEmpty()
-                }
+                val articlesToShow = if (searchText.isNotEmpty()) searchState.news.orEmpty()
+                else category.news.orEmpty()
 
                 if (articlesToShow.isEmpty()) {
                     Box(
@@ -164,7 +168,9 @@ fun HomeScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            "No articles found", color = Color.Gray, fontSize = 16.sp
+                            localizedContext.getString(R.string.no_articles_found),
+                            color = Color.Gray,
+                            fontSize = 16.sp
                         )
                     }
                 } else {
@@ -182,13 +188,17 @@ fun HomeScreen(
                 }
             }
         }
-
         if (languageDropdownExpanded) {
             LanguageDropdown(
                 expanded = languageDropdownExpanded,
                 currentLanguage = currentLanguage,
                 onExpandedChange = { languageDropdownExpanded = it },
-                onLanguageSelected = { currentLanguage = it })
+                onLanguageSelected = {
+                    viewModel.changeLanguage(it)
+                    languageDropdownExpanded = false
+                },
+                localizedContext
+            )
         }
     }
 }
@@ -196,10 +206,10 @@ fun HomeScreen(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Tabbar() {
+fun Tabbar(localizedContext: Context) {
     Column(
         Modifier
-            .padding(20.dp)
+            .padding(16.dp)
             .statusBarsPadding()
     ) {
         Row(
@@ -214,7 +224,9 @@ fun Tabbar() {
                     .size(18.dp)
             )
             Text(
-                "News Catcher", fontSize = 20.sp, fontFamily = FontFamily(Font(R.font.inter_bold))
+                localizedContext.getString(R.string.news_catcher),
+                fontSize = 20.sp,
+                fontFamily = FontFamily(Font(R.font.inter_bold))
             )
         }
         val formatter = DateTimeFormatter.ofPattern("d MMMM yyyy")
@@ -225,14 +237,15 @@ fun Tabbar() {
     }
 }
 
-// TODO: test commıt 
 @Composable
-fun NewsHorizontal(articles: List<Article>, navController: NavController,homeViewModel: HomeViewModel) {
+fun NewsHorizontal(
+    articles: List<Article>, navController: NavController
+) {
     val listState = rememberLazyListState()
     LazyRow(
         state = listState, modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, top = 20.dp)
+            .padding(start = 16.dp, top = 20.dp)
     ) {
         items(articles) { article ->
             Box(
@@ -264,18 +277,18 @@ fun NewsHorizontal(articles: List<Article>, navController: NavController,homeVie
                             )
                         )
                 )
-//                Text(
-//                    text = article.source?.name ?: "",
-//                    color = Color.Black,
-//                    fontSize = 12.sp,
-//                    fontWeight = FontWeight.Bold,
-//                    modifier = Modifier
-//                        .align(Alignment.TopStart)
-//                        .padding(12.dp)
-//                        .clip(RoundedCornerShape(16.dp))
-//                        .background(Color.LightGray)
-//                        .padding(horizontal = 8.dp, vertical = 4.dp)
-//                )
+                Text(
+                    text = article.source?.name ?: "",
+                    color = Color.Black,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.LightGray)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                )
                 Text(
                     text = article.title ?: "",
                     color = Color.Black,
@@ -294,15 +307,19 @@ fun NewsHorizontal(articles: List<Article>, navController: NavController,homeVie
 
 
 @Composable
-fun Search(text: String, onTextChange: (String) -> Unit) {
+fun Search(text: String, onTextChange: (String) -> Unit, localizedContext: Context) {
     OutlinedTextField(
         value = text,
         onValueChange = { onTextChange(it) },
-        placeholder = { Text("Search...", color = Color(0xFFE2E2E2)) },
+        placeholder = {
+            Text(
+                localizedContext.getString(R.string.search), color = Color(0xFFE2E2E2)
+            )
+        },
         singleLine = true,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp, top = 20.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 20.dp)
             .border(1.5.dp, Color(0xFFE2E2E2), RoundedCornerShape(24.dp)),
         keyboardOptions = KeyboardOptions.Default,
         colors = OutlinedTextFieldDefaults.colors(
@@ -358,7 +375,8 @@ fun LanguageDropdown(
     expanded: Boolean,
     currentLanguage: String,
     onExpandedChange: (Boolean) -> Unit,
-    onLanguageSelected: (String) -> Unit
+    onLanguageSelected: (String) -> Unit,
+    localizedContext: Context
 ) {
     if (!expanded) return
 
@@ -390,7 +408,8 @@ fun LanguageDropdown(
         }
 
         Column(modifier = Modifier.padding(16.dp)) {
-            val languages = listOf("EN", "RU")
+            val languages =
+                listOf(localizedContext.getString(R.string.en), stringResource(R.string.ru))
             languages.forEach { lang ->
                 Row(
                     modifier = Modifier
@@ -400,7 +419,7 @@ fun LanguageDropdown(
                             indication = null
                         ) {
                             onLanguageSelected(lang)
-                            onExpandedChange(false)
+                            onExpandedChange(true)
                         }
                         .padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -433,7 +452,6 @@ fun CategoryDropdown(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() }, indication = null
                 ) { expanded = true }
-                .padding(horizontal = 20.dp, vertical = 10.dp)
                 .background(Color(0xFFE8E8E8), RoundedCornerShape(20.dp))
                 .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically) {
@@ -443,7 +461,9 @@ fun CategoryDropdown(
         }
 
         DropdownMenu(
-            expanded = expanded, onDismissRequest = { expanded = false }) {
+            expanded = expanded,
+            containerColor = Color.White,
+            onDismissRequest = { expanded = false }) {
             NewsCategory.entries.forEach { category ->
                 DropdownMenuItem(text = { Text(category.name) }, onClick = {
                     onCategorySelected(category)
